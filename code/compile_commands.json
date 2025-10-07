@@ -1,0 +1,14 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-o",
+      "./syntax.tab.o",
+      "./syntax.tab.c"
+    ],
+    "directory": "/home/shelia/University/CompilerPrinciples/code",
+    "file": "/home/shelia/University/CompilerPrinciples/code/syntax.tab.c",
+    "output": "/home/shelia/University/CompilerPrinciples/code/syntax.tab.o"
+  }
+]

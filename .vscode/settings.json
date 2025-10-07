@@ -1,0 +1,19 @@
+{
+    // the same colors as above but more visible
+    "indentRainbow.colors": [
+      "rgba(255,255,64,0.3)",
+      "rgba(127,255,127,0.3)",
+      "rgba(255,127,255,0.3)",
+      "rgba(79,236,236,0.3)"
+    ],
+    "cmake.configureOnOpen": true,
+    "files.associations": {
+      "stdlib.h": "c",
+      "stddef.h": "c",
+      "stdio.h": "c"
+    },
+    "C_Cpp.default.compilerPath": "",
+    "files.exclude": {
+    "**/lex.yy.c": true
+    }
+}
