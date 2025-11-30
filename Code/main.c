@@ -22,7 +22,8 @@ int main(int argc, char **argv){
         yyrestart(f);
         int result = yyparse();
         if(result == 0 && lexical_error == 0 && syntax_error == 0){
-            if(root != NULL)    Print(root, 0);
+            semantic_init();
+            semantic_analyze(root);
         }
         if(root!=NULL){
             Delete(root);
