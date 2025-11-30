@@ -57,7 +57,8 @@ static void bucket_remove(Symbol **bucket_head, Symbol *target){
             else *bucket_head = cur->hash_next;
             return;
         }
-        prev = cur; cur = cur->hash_next;
+        prev = cur; 
+        cur = cur->hash_next;
     }
 }
 
@@ -91,15 +92,18 @@ void symtab_leave_scope(void){
     Symbol *s = g_top->head;
     while(s){
         Symbol *next = s->scope_next;
-        if(s->depth > 0){
-            unsigned idx = hash_pjw(s->name);
-            bucket_remove(&g_hash[idx], s);
-            free_symbol(s);
-        }
+        // 从哈希桶中移除
+        unsigned idx = hash_pjw(s->name);
+        bucket_remove(&g_hash[idx], s);
+        free_symbol(s);
+        
         s = next;
     }
+    
     // 弹出帧
-    ScopeFrame *old = g_top; g_top = g_top->prev; free(old);
+    ScopeFrame *old = g_top; 
+    g_top = g_top->prev; 
+    free(old);
 }
 
 int symtab_current_depth(void){ return g_top ? g_top->depth : 0;}
@@ -176,36 +180,63 @@ Symbol *sym_make_func_def(const char *name, FuncSig *fn){
 Symbol *symtab_lookup(const char *name){
     if(!name) return NULL;
     unsigned idx = hash_pjw(name);
+    
+    // 遍历哈希桶，找到最近作用域的定义
+    Symbol *result = NULL;
+    int max_depth = -1;
+    
     for(Symbol *s = g_hash[idx]; s; s = s->hash_next){
-        if(strcmp(s->name, name)==0) return s; // 最近定义优先（头插）
+        if(strcmp(s->name, name)==0) {
+            // 找到同名的符号，选择深度最大的（即最近的作用域）
+            if(s->depth > max_depth) {
+                max_depth = s->depth;
+                result = s;
+            }
+        }
     }
-    return NULL;
+    return result;
 }
 
 Symbol *symtab_lookup_in_current_scope(const char *name){
     if(!name || !g_top) return NULL;
-    // 遍历当前作用域链表（比遍历整个桶更快定位“是否本层重名”）
+    int current_depth = symtab_current_depth();
+    
+    // 遍历当前作用域链表
     for(Symbol *s = g_top->head; s; s = s->scope_next){
-        if(strcmp(s->name, name)==0) return s;
+        if(strcmp(s->name, name)==0 && s->depth == current_depth) {
+            return s;
+        }
     }
     return NULL;
 }
 
 /*--------------------- 插入 ---------------------*/
+
 int symtab_insert(Symbol *s){
     if(!s || !s->name){ return 0; }
     if(!g_top){ symtab_init(); }
-    // 1) 本层重名检查
-    if(symtab_lookup_in_current_scope(s->name)){ return 0;} // 同一作用域内不可重名 }
-    // 2) 插入哈希桶（头插保证“最近定义优先”）
+    
+    int current_depth = symtab_current_depth();
+    
+    // 1) 检查当前作用域是否已有同名符号（不允许同一作用域内重名）
+    Symbol *existing_in_current_scope = symtab_lookup_in_current_scope(s->name);
+    if(existing_in_current_scope){ 
+        return 0; // 同一作用域内不可重名
+    }
+    
+    // 2) 插入哈希桶（头插）
     unsigned idx = hash_pjw(s->name);
     s->hash_next = g_hash[idx];
     g_hash[idx] = s;
+    
     // 3) 插入本层作用域链
     s->scope_next = g_top->head;
     g_top->head = s;
+    
     // 4) 记录深度
-    s->depth = g_top->depth;
+    s->depth = current_depth;
+    s->is_current_scope = 1;
+    
     return 1;
 }
 

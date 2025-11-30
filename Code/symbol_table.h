@@ -30,6 +30,7 @@ typedef struct Symbol {
     Type type; // 变量/结构体的类型；函数名时可为 NULL
     FuncSig *func; // 函数信息；非函数时为 NULL
     int depth; // 作用域深度（0 为全局，逐层 +1）
+    int is_current_scope; // 新增：标记是否是当前作用域的定义
     // 哈希桶链 & 作用域链（头插法）
     struct Symbol *hash_next;
     struct Symbol *scope_next;

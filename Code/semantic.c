@@ -9,6 +9,7 @@
 /*********************************
  *  AST 访问宏（基于 node.h）    *
  *********************************/
+
 #define NODE_KIND(n)   ((n)->name)
 #define NODE_LINE(n)   ((n)->lineno)
 #define NODE_CHILD(n)  ((n)->child)
@@ -32,6 +33,7 @@ static long parse_int(Node* n){
 /*********************************
  *  错误与全局状态               *
  *********************************/
+
 static int g_errcnt = 0;
 static Type g_current_func_ret = NULL; // 当前函数返回类型（用于 return 检查）
 
@@ -47,6 +49,7 @@ int semantic_error_count(void){ return g_errcnt; }
 /*********************************
  *  前向声明（visit_*）          *
  *********************************/
+
 static void visit_Program(Node* n);
 static void visit_ExtDefList(Node* n);
 static void visit_ExtDef(Node* n);
@@ -69,6 +72,7 @@ static Type find_struct_field(Type st, const char* name);
 /*********************************
  *  入口                         *
  *********************************/
+
 void semantic_init(void){
     symtab_init();
     g_errcnt = 0;
@@ -84,6 +88,7 @@ void semantic_analyze(Node* root){
 /*********************************
  *  语法单元：Program / ExtDef*  *
  *********************************/
+
 static void visit_Program(Node* n){
     // Program -> ExtDefList
     Node* extdeflist = child_at(n, 0);
@@ -150,6 +155,7 @@ static void visit_ExtDef(Node* n){
 /*********************************
  *  Specifier / StructSpecifier  *
  *********************************/
+
 static Type visit_Specifier(Node* n){
     if (!n) {
         report(17, 0, "Null specifier node");
@@ -304,39 +310,28 @@ static Type visit_StructSpecifier(Node* n){
 /*********************************
  *  VarDec / 构造数组层级        *
  *********************************/
+
 static Type visit_VarDec(Node* n, Type base, char** out_name){
-    // printf("DEBUG: visit_VarDec at line %d\n", line(n));
     
     Node* c0 = child_at(n,0);
-    // printf("DEBUG: VarDec: first child '%s'\n", kind(c0));
     
     if(strcmp(kind(c0), "ID")==0){
         const char* id_name = TEXT(c0);
-        // printf("DEBUG: VarDec: ID name '%s'\n", id_name ? id_name : "NULL");
-        
-        if(out_name && id_name) {
-            *out_name = xstrdup(id_name);
-            // printf("DEBUG: VarDec: copied name '%s' to address %p\n", *out_name, (void*)*out_name);
-        }
+        if(out_name && id_name)    *out_name = xstrdup(id_name);
         return base;
-    }else{
-        // printf("DEBUG: VarDec: array type\n");
+    }
+    else{
         // VarDec LB INT RB
         char* inner_name = NULL;  // 改为有意义的变量名
         Type elem = visit_VarDec(c0, base, &inner_name); 
-        // printf("DEBUG: VarDec: recursive call returned, inner_name=%p\n", (void*)inner_name);
         
         Node* intnode = child_at(n,2);
         int sz = intnode ? (int)parse_int(intnode) : 0;
         if(sz<=0) report(15, line(intnode?intnode:n), "Illegal array size");
         
         // 重要：将内部名称传递到外层
-        if(out_name && inner_name) {
-            *out_name = inner_name;  // 直接传递所有权，不需要复制
-            // printf("DEBUG: VarDec: array case - passed name '%s' to outer\n", *out_name);
-        } else if (inner_name) {
-            free(inner_name);  // 如果外层不需要名称，释放内存
-        }
+        if(out_name && inner_name)    *out_name = inner_name;  // 直接传递所有权，不需要复制
+        else if (inner_name)    free(inner_name);  // 如果外层不需要名称，释放内存
         
         return type_make_array(elem, sz);
     }
@@ -345,6 +340,7 @@ static Type visit_VarDec(Node* n, Type base, char** out_name){
 /*********************************
  *  函数：FunDec / 形参列表      *
  *********************************/
+
 static FieldList build_ParamList_from_VarList(Node* varlist){
     FieldList head = NULL, tail = NULL;
     for(Node* p = varlist; p; ){
@@ -519,41 +515,33 @@ static void visit_FunDec(Node* n, Type ret, int is_def){
 /*********************************
  *  复合语句块 / 局部定义        *
  *********************************/
+
 static void visit_CompSt(Node* n){
     symtab_enter_scope();
-    // printf("DEBUG: Entering CompSt at line %d\n", line(n));
     
     if (g_pending_params) {
         for (FieldList f = g_pending_params; f; f = f->tail) {
-            if (symtab_lookup_in_current_scope(f->name)) {
+            // 参数在当前作用域，允许与外部变量重名
+            Symbol* vs = sym_make_var(f->name, type_deepcopy(f->type));
+            if(!symtab_insert(vs)){
                 report(3, line(n), "Redefined parameter '%s'", f->name);
-            } else {
-                Symbol* vs = sym_make_var(f->name, type_deepcopy(f->type));
-                symtab_insert(vs);
             }
         }
         fieldlist_free_all(g_pending_params);
         g_pending_params = NULL;
     }
 
+    // 处理局部变量定义
     for (Node* child = NODE_CHILD(n); child; child = NODE_NEXT(child)) {
-        // printf("DEBUG: CompSt child: %s\n", kind(child));
         if (strcmp(kind(child), "DefList") == 0) {
-            // printf("DEBUG: Found DefList, visiting...\n");
             visit_DefList(child, /*is_struct_field=*/0);
-            // printf("DEBUG: After visit_DefList, symbol table:\n");
-            // symtab_print_current_scope();  // 打印符号表状态
         } else if (strcmp(kind(child), "StmtList") == 0) {
-            // printf("DEBUG: Found StmtList, visiting...\n");
             visit_StmtList(child);
         }
     }
 
-    // printf("DEBUG: Before leaving CompSt, symbol table:\n");
-    // symtab_print_current_scope();  // 打印离开前的符号表状态
     symtab_leave_scope();
 }
-
 
 static void visit_StmtList(Node* n){
     for(Node* p=n; p; p=child_at(p,1)){
@@ -565,25 +553,42 @@ static void visit_StmtList(Node* n){
 static void visit_Stmt(Node* n){
     Node* c0 = child_at(n,0);
     if(!c0) return;
+    
     if(strcmp(kind(c0), "Exp")==0){
         int lv=0; (void)visit_Exp(c0, &lv);
-    }else if(strcmp(kind(c0), "CompSt")==0){
-        visit_CompSt(c0);
-    }else if(strcmp(kind(c0), "RETURN")==0){
+    }
+    else if(strcmp(kind(c0), "CompSt")==0){
+        visit_CompSt(c0); // 已经包含作用域管理
+    }
+    else if(strcmp(kind(c0), "RETURN")==0){
         Type t = visit_Exp(child_at(n,1), NULL);
         if(g_current_func_ret && !type_equal(g_current_func_ret, t, false)){
             report(8, line(n), "Type mismatched for return");
         }
-    }else if(strcmp(kind(c0), "IF")==0){
-        (void)visit_Exp(child_at(n,2), NULL); // 条件表达式
+    }
+    else if(strcmp(kind(c0), "IF")==0){
+        (void)visit_Exp(child_at(n,2), NULL);
+        
+        // 为 then 分支创建作用域
+        symtab_enter_scope();
         visit_Stmt(child_at(n,4));
+        symtab_leave_scope();
+        
         Node* elsekw = child_at(n,5);
         if(elsekw && strcmp(kind(elsekw),"ELSE")==0){
+            // 为 else 分支创建作用域
+            symtab_enter_scope();
             visit_Stmt(child_at(n,6));
+            symtab_leave_scope();
         }
-    }else if(strcmp(kind(c0), "WHILE")==0){
+    }
+    else if(strcmp(kind(c0), "WHILE")==0){
         (void)visit_Exp(child_at(n,2), NULL);
+        
+        // 为循环体创建作用域
+        symtab_enter_scope();
         visit_Stmt(child_at(n,4));
+        symtab_leave_scope();
     }
 }
 
@@ -598,29 +603,17 @@ static void visit_DefList(Node* n, int is_struct_field){
 }
 
 static void visit_Def(Node* n, int is_struct_field){
-    // printf("DEBUG: visit_Def at line %d\n", line(n));
-    
     // Def -> Specifier DecList SEMI
     Node* spec_node = child_at(n, 0);
-    // printf("DEBUG: Def: specifier node '%s'\n", kind(spec_node));
-    
     Type base = visit_Specifier(spec_node);
-    // printf("DEBUG: Def: base type created\n");
-    
     Node* declist_node = child_at(n, 1);
-    // printf("DEBUG: Def: declist node '%s'\n", kind(declist_node));
-    
     visit_DecList(declist_node, base, is_struct_field);
 }
 
 static void visit_DecList(Node* n, Type base, int is_struct_field){
     for(Node* p=n; p; ){
         Node* dec = child_at(p, 0);
-        if (!dec) {
-            // printf("DEBUG: DecList: no dec node\n");
-            break;
-        }
-        // printf("DEBUG: DecList: processing dec node '%s' at line %d\n", kind(dec), line(dec));
+        if (!dec)    break;
         visit_Dec(child_at(p,0), base, is_struct_field);
         Node* comma = child_at(p,1);
         if(comma && child_at(p,2)) p = child_at(p,2); 
@@ -629,49 +622,27 @@ static void visit_DecList(Node* n, Type base, int is_struct_field){
 }
 
 static void visit_Dec(Node* n, Type base, int is_struct_field){
-    // printf("DEBUG: visit_Dec at line %d\n", line(n));
-    
     Node* vardec = child_at(n,0);
-    // printf("DEBUG: Dec: vardec node '%s' at line %d\n", kind(vardec), line(vardec));
-    
     char* name=NULL; 
     Type t = visit_VarDec(vardec, base, &name);
     
     if(name){
-        // 检查当前作用域
+        // 只检查当前作用域是否有重名（允许覆盖外层作用域的定义）
         Symbol* existing = symtab_lookup_in_current_scope(name);
         if(existing){
-            // printf("DEBUG: '%s' already exists in current scope\n", name);
             report(3, line(vardec), "Redefined variable '%s'", name);
             type_free(t);
         }
         else{
-            // printf("DEBUG: '%s' not in current scope, creating symbol...\n", name);
             Symbol* s = sym_make_var(name, t);
-            // printf("DEBUG: Symbol created, name: '%s'\n", s->name);
-            
-            // printf("DEBUG: Attempting to insert symbol...\n");
             if(!symtab_insert(s)){
-                // printf("DEBUG: Insertion failed for '%s'\n", name);
                 report(3, line(vardec), "Redefined variable '%s'", name);
                 free_symbol(s);
-            } else {
-                // printf("DEBUG: Successfully inserted '%s'\n", name);
-                
-                // 立即验证
-                // printf("DEBUG: Verifying insertion...\n");
-                Symbol* found = symtab_lookup(name);
-                if(found) {
-                    // printf("DEBUG: VERIFIED: '%s' found in symbol table\n", name);
-                } else {
-                    // printf("DEBUG: ERROR: '%s' NOT found after insertion!\n", name);
-                }
             }
         }
         
-        // 处理初始化（如果有）
+        // 处理初始化
         if(child_at(n,1)){
-            // printf("DEBUG: Processing initialization for '%s'\n", name);
             Type rt = visit_Exp(child_at(n,2), NULL);
             if(!type_equal(t, rt, false)){
                 report(5, line(n), "Type mismatched for assignment (initializer)");
@@ -679,9 +650,7 @@ static void visit_Dec(Node* n, Type base, int is_struct_field){
         }
         
         free(name);
-        // printf("DEBUG: visit_Dec completed for '%s'\n", name);
     } else {
-        // printf("DEBUG: Dec: no name extracted from vardec\n");
         type_free(t);
     }
 }
@@ -689,6 +658,7 @@ static void visit_Dec(Node* n, Type base, int is_struct_field){
 /*********************************
  *  表达式                        *
  *********************************/
+
 static int is_relop(Node* n){ return strcmp(kind(n),"RELOP")==0; }
 
 static Type visit_Exp(Node* n, int* is_lvalue){
@@ -700,16 +670,20 @@ static Type visit_Exp(Node* n, int* is_lvalue){
     // ID
     if(strcmp(kind(c0), "ID")==0 && !c1){
         const char* name = TEXT(c0);
-        Symbol* s = symtab_lookup(name);
+        Symbol* s = symtab_lookup(name); // 这会自动找到最近作用域的定义
+        
         if(!s){
             report(1, line(n), "Undefined variable '%s'", name); 
             if (is_lvalue) *is_lvalue = 1;
             return type_make_basic(TY_INT); 
         }
+        
+        // 检查是否是函数名被误用为变量
         if(s->kind == SYM_FUNC){ 
             report(1, line(n), "'%s' is a function, not a variable", name); 
             return type_make_basic(TY_INT);
         }
+        
         if(is_lvalue) *is_lvalue = 1;
         return s->type;
     }
@@ -787,7 +761,6 @@ static Type visit_Exp(Node* n, int* is_lvalue){
 
     // 数组访问 A[B]
     if(c1 && strcmp(kind(c1),"LB")==0){
-        // printf("DEBUG: Array access at line %d\n", line(n));
         Type a = visit_Exp(c0, NULL); 
         Type idx = visit_Exp(c2, NULL);
 
@@ -798,21 +771,14 @@ static Type visit_Exp(Node* n, int* is_lvalue){
 
         // 检查数组索引类型：如果是浮点数，报告错误类型12
         if(idx && type_is_float(idx)){
-            // printf("DEBUG: Float index detected, reporting error type 12\n");
             report(12, line(c2), "\"%s\" is not an integer", TEXT(c2) ? TEXT(c2) : "index");
-        // 在报告错误后，我们仍然应该设置左值标志，因为数组访问本身是左值
-            if(is_lvalue) {
-                *is_lvalue = 1;
-                // printf("DEBUG: Array access: setting is_lvalue=1 despite index error\n");
-            }
+            // 在报告错误后，我们仍然应该设置左值标志，因为数组访问本身是左值
+            if(is_lvalue)    *is_lvalue = 1;
             return type_array_elem(a);
         }
         if(!type_is_int(idx))    report(12, line(n), "Array index is not an integer");
     
-        if(is_lvalue) {
-            *is_lvalue = 1;
-            // printf("DEBUG: Array access: setting is_lvalue=1\n");
-        }
+        if(is_lvalue)    *is_lvalue = 1;
     return type_array_elem(a);
 }
 
@@ -853,10 +819,6 @@ static Type visit_Exp(Node* n, int* is_lvalue){
         if (!a || !b)     return type_make_basic(TY_INT);
         if(!type_is_numeric(a) || !type_is_numeric(b) || !type_equal(a,b,false))    report(7, line(n), "Type mismatched for operands");
         return type_make_basic(TY_INT);
-        // Type a = visit_Exp(c0, NULL), b = visit_Exp(c2, NULL);
-        // if(!type_is_numeric(a) || !type_is_numeric(b) || !type_equal(a,b,false))
-        //     report(7, line(n), "Type mismatched for operands");
-        // return type_make_basic(TY_INT);
     }
     if(c1 && (strcmp(kind(c1),"PLUS")==0 || strcmp(kind(c1),"MINUS")==0 ||
               strcmp(kind(c1),"STAR")==0 || strcmp(kind(c1),"DIV")==0)){
@@ -873,6 +835,7 @@ static Type visit_Exp(Node* n, int* is_lvalue){
 /*********************************
  *  结构体成员查找                *
  *********************************/
+
 static Type find_struct_field(Type st, const char* name){
     if(!type_is_struct(st)) return NULL;
     for(FieldList f = st->u.structure; f; f=f->tail){
