@@ -3,7 +3,7 @@
 
 
 #include "type.h"
-#include "node.h" // <- 使用你提供的 Node 结构
+#include "../node.h" // <- 使用你提供的 Node 结构
 #include "symbol_table.h"
 
 #ifdef __cplusplus

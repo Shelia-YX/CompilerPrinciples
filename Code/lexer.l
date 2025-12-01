@@ -36,7 +36,7 @@ id      {letter}({digit}|{letter})*
 ";"     {return SEMI;}
 ","     {return COMMA;}
 "="     {return ASSIGNOP;}
-">="|"<="|"=="|"!="|">"|"<" {return RELOP;}
+">="|"<="|"=="|"!="|">"|"<" {yylval.sval = strdup(yytext); return RELOP;}
 "+"     {return PLUS;}
 "-"     {return MINUS;}
 "*"     {return STAR;}

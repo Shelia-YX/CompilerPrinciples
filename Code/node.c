@@ -21,6 +21,16 @@ Node* CreateBinary(int lineno, const char *nm, Node *lft, Node *rgt){
     return tmp;
 }
 
+Node* CreateRelop(int lineno, const char *nm, Node *lft, Node *rgt){
+    Node *tmp = CreateNode("Exp", lineno);
+    AddChild(tmp, lft);
+    Node *op = CreateNode("RELOP", -1);
+    op->value = xstrdup(nm);
+    AddChild(tmp, op);
+    AddChild(tmp, rgt);
+    return tmp;
+}
+
 Node* CreateOp(int lineno, const char *nm, Node* n){
     Node *tmp = CreateNode("Exp", lineno);
     Node *op = CreateNode(nm, -1);

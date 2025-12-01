@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "type.h"
+#include "semantic/type.h"
 
 typedef struct Node{
     int lineno;
@@ -18,6 +18,7 @@ extern Node *root;
 
 Node* CreateNode(const char *name, int lineno);
 Node* CreateBinary(int lineno, const char *nm, Node *lft, Node *rgt);
+Node* CreateRelop(int lineno, const char *nm, Node *lft, Node *rgt);
 Node* CreateFunc(int lineno, const char *nm, Node *args);
 Node* CreateOp(int lineno, const char *nm, Node* n);
 void AddChild(Node *prt, Node *child);

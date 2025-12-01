@@ -26,9 +26,9 @@
 
 %token <ival> INT
 %token <fval> FLOAT
-%token <sval> ID TYPE
+%token <sval> ID TYPE RELOP
 %token PLUS MINUS STAR DIV
-%token ASSIGNOP RELOP
+%token ASSIGNOP 
 %token COMMA SEMI LP RP LC RC DOT LB RB
 %token IF ELSE WHILE RETURN STRUCT
 
@@ -318,7 +318,7 @@ Dec: VarDec{
 Exp: Exp ASSIGNOP Exp { $$ = CreateBinary(@2.first_line, "ASSIGNOP", $1, $3); }
 | Exp AND Exp         { $$ = CreateBinary(@2.first_line, "AND", $1, $3); }
 | Exp OR Exp          { $$ = CreateBinary(@2.first_line, "OR", $1, $3); }
-| Exp RELOP Exp       { $$ = CreateBinary(@2.first_line, "RELOP", $1, $3); }
+| Exp RELOP Exp       { $$ = CreateRelop(@2.first_line, $2, $1, $3); }
 | Exp PLUS Exp        { $$ = CreateBinary(@2.first_line, "PLUS", $1, $3); }
 | Exp MINUS Exp       { $$ = CreateBinary(@2.first_line, "MINUS", $1, $3); }
 | Exp STAR Exp        { $$ = CreateBinary(@2.first_line, "STAR", $1, $3); }
