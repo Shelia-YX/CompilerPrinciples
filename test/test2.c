@@ -1,4 +1,22 @@
+struct Operands
+{
+    int o1;
+    int o2;
+};
+
+int add(struct Operands temp)
+{
+    return (temp.o1 + temp.o2);
+}
+
 int main()
 {
-    struct Position pos;
+    int n;
+    struct Operands op;
+    op.o1 = 1;
+    op.o2 = 2;
+    n = add(op);
+    write(n);
+    return 0;
 }
+

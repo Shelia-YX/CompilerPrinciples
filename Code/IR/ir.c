@@ -53,11 +53,14 @@ Operand op_function(char* name) {
     return op;
 }
 
+// ir.c - 修复op_address函数
 Operand op_address(Operand var) {
-    /* 简单实现：把地址操作数也用 var_no 标记，对应的变量编号 */
+    /* 正确实现地址操作数 */
     Operand op = (Operand)xmalloc(sizeof(*op));
     op->kind = OP_ADDRESS;
-    op->u.var_no = var->u.var_no;
+    // 保存原始操作数的引用
+    op->u.var_no = var->u.var_no;  // 保存变量编号
+    op->addr_of = var;  // 添加这个字段来引用原始操作数
     return op;
 }
 
@@ -265,11 +268,10 @@ static void print_operand(FILE* out, Operand op) {
         fprintf(out, "%s", op->u.name);
         break;
     case OP_ADDRESS:
-        /* 打印成 &vX / &tX，这里统一用 vX 表示变量编号 */
+        // 对于地址操作数，打印 &vX
         fprintf(out, "&v%d", op->u.var_no);
         break;
     default:
-        /* 不应到这里 */
         fprintf(out, "??");
         break;
     }

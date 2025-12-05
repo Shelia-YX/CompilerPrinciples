@@ -11,8 +11,9 @@ extern int lexical_error;
 extern int syntax_error;
 
 int main(int argc, char **argv){
-    if(argc < 3){
-        fprintf(stderr, "Usage: %s input.cmm output.ir\n", argv[0]);
+    if(argc < 2){
+        fprintf(stderr, "Usage: %s input.cmm [output.ir]\n", argv[0]);
+        fprintf(stderr, "       If output.ir is omitted, result will be printed to stdout\n");
         return 1;
     }
 
@@ -29,16 +30,34 @@ int main(int argc, char **argv){
     int result = yyparse();
 
     temp_init();
+    // Print(root, 0);
+
     IRList code = translate_Program(root);
 
-    FILE *out = fopen(argv[2], "w");
-    if(!out){
-        perror(argv[2]);
-        fclose(f);
-        return 1;
+    FILE *out = stdout;  // 默认输出到终端
+    
+    if(argc >= 3){
+        // 如果有第三个参数，输出到文件
+        out = fopen(argv[2], "w");
+        if(!out){
+            perror(argv[2]);
+            fclose(f);
+            return 1;
+        }
     }
-    irlist_print(out, code);
-    fclose(out);
+    
+    if(!has_fatal_error){
+        irlist_print(out, code);
+    }else{
+        printf("由于之前的错误，未生成中间代码。\n");
+    }
+
+    
+    // 如果打开了文件，需要关闭它
+    if(out != stdout){
+        fclose(out);
+    }
+    
     irlist_free(code);
 
     if(root != NULL){

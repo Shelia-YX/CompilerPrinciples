@@ -26,6 +26,7 @@ typedef struct Operand_ {
         int value;      // 常数值
         char* name;     // 函数名/标签名
     } u;
+    struct Operand_* addr_of;  // 新增：如果是地址，指向原始操作数
 } *Operand;
 
 /* 中间代码类型 */

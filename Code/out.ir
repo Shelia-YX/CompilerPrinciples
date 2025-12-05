@@ -1,28 +1,30 @@
-FUNCTION main :
-READ t1
-v1 := t1
-t2 := v1
-t3 := #0
-IF t2 > t3 GOTO label1
-GOTO label2
-LABEL label1 :
-t4 := #1
-WRITE t4
-GOTO label3
-LABEL label2 :
+FUNCTION add :
+PARAM v1
+t4 := v1
+t2 := *t4
 t5 := v1
-t6 := #0
-IF t5 < t6 GOTO label4
-GOTO label5
-LABEL label4 :
-t8 := #1
-t7 := #0 - t8
-WRITE t7
-GOTO label6
-LABEL label5 :
-t9 := #0
-WRITE t9
-LABEL label6 :
-LABEL label3 :
-t10 := #0
-RETURN t10
+t6 := t5 + #4
+t3 := *t6
+t1 := t2 + t3
+RETURN t1
+FUNCTION main :
+DEC v3 8
+t7 := &v3
+*t7 := #0
+t8 := t7 + #4
+*t8 := #0
+t9 := #1
+t10 := &v3
+*t10 := t9
+t11 := #2
+t12 := &v3
+t13 := t12 + #4
+*t13 := t11
+t15 := &v3
+ARG t15
+t14 := CALL add
+v2 := t14
+t16 := v2
+WRITE t16
+t17 := #0
+RETURN t17

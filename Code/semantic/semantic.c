@@ -38,10 +38,10 @@ static int g_errcnt = 0;
 static Type g_current_func_ret = NULL; // 当前函数返回类型（用于 return 检查）
 
 static void report(int etype, int lineno, const char* fmt, ...){
-    ++g_errcnt;
-    fprintf(stderr, "Error type %d at Line %d: ", etype, lineno);
-    va_list ap; va_start(ap, fmt); vfprintf(stderr, fmt, ap); va_end(ap);
-    fputc('\n', stderr);
+    // ++g_errcnt;
+    // fprintf(stderr, "Error type %d at Line %d: ", etype, lineno);
+    // va_list ap; va_start(ap, fmt); vfprintf(stderr, fmt, ap); va_end(ap);
+    // fputc('\n', stderr);
 }
 
 int semantic_error_count(void){ return g_errcnt; }
@@ -303,6 +303,7 @@ static Type visit_StructSpecifier(Node* n){
                 }
             }
         }
+
         return st;
     }
 }

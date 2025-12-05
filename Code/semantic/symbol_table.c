@@ -47,7 +47,6 @@ void free_symbol(Symbol *s){
     free(s);
 }
 
-
 /* 从哈希桶删除一个具体节点（假定一定存在） */
 static void bucket_remove(Symbol **bucket_head, Symbol *target){
     Symbol *prev = NULL, *cur = *bucket_head;
