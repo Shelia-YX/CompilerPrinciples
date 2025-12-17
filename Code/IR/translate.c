@@ -302,60 +302,60 @@ static int get_struct_field_offset(Type struct_type, const char* field_name) {
  *   调试辅助函数      *
  *=====================*/
 
- // 改进的调试函数
- static void print_type_info(Type type, const char* prefix) {
-     if (!type) {
-        //  printf("%s: NULL\n", prefix);
-         return;
-     }
-     
-    //  printf("%s: kind=%d", prefix, type->kind);
-     
-     if (type->kind == T_ARRAY) {
-        //  printf(", size=%d\n", type->u.array.size);
-         // 递归打印元素类型
-         char new_prefix[100];
-         snprintf(new_prefix, sizeof(new_prefix), "%s->elem", prefix);
-         print_type_info(type->u.array.elem, new_prefix);
-     } else if (type->kind == T_BASIC) {
-        //  printf(", basic type\n");
-     } else if (type->kind == T_STRUCT) {
-        //  printf(", struct type\n");
-     }
- }
+// 改进的调试函数
+static void print_type_info(Type type, const char* prefix) {
+    if (!type) {
+    //  printf("%s: NULL\n", prefix);
+        return;
+    }
+    
+//  printf("%s: kind=%d", prefix, type->kind);
+    
+    if (type->kind == T_ARRAY) {
+    //  printf(", size=%d\n", type->u.array.size);
+        // 递归打印元素类型
+        char new_prefix[100];
+        snprintf(new_prefix, sizeof(new_prefix), "%s->elem", prefix);
+        print_type_info(type->u.array.elem, new_prefix);
+    } else if (type->kind == T_BASIC) {
+    //  printf(", basic type\n");
+    } else if (type->kind == T_STRUCT) {
+    //  printf(", struct type\n");
+    }
+}
 
- // 检查类型是否为多维数组
- static int is_multi_dimension_array(Type type) {
-     if (!type) return 0;
-     
-     int dimension = 0;
-     Type temp = type;
-     
-     while (temp && temp->kind == T_ARRAY) {
-         dimension++;
-         if (dimension > 1) {
-             return 1;  // 是多维数组
-         }
-         temp = temp->u.array.elem;
-     }
-     
-     return 0;  // 不是多维数组
- }
- 
+// 检查类型是否为多维数组
+static int is_multi_dimension_array(Type type) {
+    if (!type) return 0;
+    
+    int dimension = 0;
+    Type temp = type;
+    
+    while (temp && temp->kind == T_ARRAY) {
+        dimension++;
+        if (dimension > 1) {
+            return 1;  // 是多维数组
+        }
+        temp = temp->u.array.elem;
+    }
+    
+    return 0;  // 不是多维数组
+}
+
  // 获取数组维度
- static int get_array_dimension(Type type) {
-     if (!type) return 0;
-     
-     int dimension = 0;
-     Type temp = type;
-     
-     while (temp && temp->kind == T_ARRAY) {
-         dimension++;
-         temp = temp->u.array.elem;
-     }
-     
-     return dimension;
- }
+static int get_array_dimension(Type type) {
+    if (!type) return 0;
+    
+    int dimension = 0;
+    Type temp = type;
+    
+    while (temp && temp->kind == T_ARRAY) {
+        dimension++;
+        temp = temp->u.array.elem;
+    }
+    
+    return dimension;
+}
 
 // 调试函数：打印AST结构
 static void debug_print_ast_structure(Node* n, int depth) {

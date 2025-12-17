@@ -1,0 +1,110 @@
+int power(int pwx, int pwe) {
+  int pwi = 1, pwr = pwx;
+
+  if (pwe <= 0) {
+    return 1;
+  }
+
+  while (pwi < pwe) {
+    pwr = pwr * pwx;
+    pwi = pwi + 1;
+  }
+
+  return pwr;
+}
+
+int B3div(int dividend, int divisor) {
+  int divsign, divdvd, divdvs;
+  int divbitnum[33], divres;
+  int divi, divd;
+
+  if (dividend == 0 || divisor == 0) {
+    return 0;
+  } else if (dividend > 0 && divisor > 0 || 
+    dividend < 0 && divisor < 0) { 
+    divsign = 1;
+  } else {
+    divsign = -1;
+  }
+
+  if (dividend > 0) {
+    divdvd = dividend;
+  } else {
+    divdvd = -dividend;
+  }
+
+  if (divisor > 0) {
+    divdvs = divisor;
+  } else {
+    divdvs = -divisor;
+  }
+
+  divi = 0; divd = divdvs;
+  divbitnum[divi] = divd;
+  while (divd <= divdvd) {
+    divi = divi + 1;
+    divbitnum[divi] = divd = divd * power(2, 1);
+  }
+  divi = divi - 1;
+
+  divres = 0;
+  while (divdvd >= divdvs) {
+    if (divdvd >= divbitnum[divi]) {
+      divdvd = divdvd - divbitnum[divi];
+      divres = divres + 1 * power(2, divi);
+    } else {
+      divi = divi - 1;
+    }
+  }
+
+  return divres * divsign;
+}
+
+int mod(int m0, int m1) {
+  return m0 - B3div(m0, m1) * m1;
+}
+
+int main() {
+  int ROMAN_STOP[13];
+  int ROMAN_CHAR[39];
+  int i, j;
+  int x = read();
+
+  ROMAN_STOP[0]  = 1000; ROMAN_STOP[1] = 900; ROMAN_STOP[2]  = 500; ROMAN_STOP[3]  = 400;
+  ROMAN_STOP[4]  = 100;  ROMAN_STOP[5] = 90;  ROMAN_STOP[6]  = 50;  ROMAN_STOP[7]  = 40;
+  ROMAN_STOP[8]  = 10;   ROMAN_STOP[9] = 9;   ROMAN_STOP[10] = 5;   ROMAN_STOP[11] = 4;
+  ROMAN_STOP[12] = 1;
+
+  ROMAN_CHAR[0]  = 1000; ROMAN_CHAR[1]  = -1;
+  ROMAN_CHAR[3]  = 100;  ROMAN_CHAR[4]  = 1000; ROMAN_CHAR[5] = -1;
+  ROMAN_CHAR[6]  = 500;  ROMAN_CHAR[7]  = -1;
+  ROMAN_CHAR[9]  = 100;  ROMAN_CHAR[10] = 500;  ROMAN_CHAR[12] = -1;
+  ROMAN_CHAR[12] = 100;  ROMAN_CHAR[13] = -1;
+  ROMAN_CHAR[15] = 10;   ROMAN_CHAR[16] = 100;  ROMAN_CHAR[17] = -1;
+  ROMAN_CHAR[18] = 50;   ROMAN_CHAR[19] = -1; 
+  ROMAN_CHAR[21] = 10;   ROMAN_CHAR[22] = 50;   ROMAN_CHAR[23] = -1;
+  ROMAN_CHAR[24] = 10;   ROMAN_CHAR[25] = -1;
+  ROMAN_CHAR[27] = 1;    ROMAN_CHAR[28] = 10;   ROMAN_CHAR[29] = -1;
+  ROMAN_CHAR[30] = 5;    ROMAN_CHAR[31] = -1;
+  ROMAN_CHAR[33] = 1;    ROMAN_CHAR[34] = 5;    ROMAN_CHAR[35] = -1;
+  ROMAN_CHAR[36] = 1;    ROMAN_CHAR[37] = -1;
+
+  i = 0; j = 0;
+  while (x > 0 && i < 13) {
+    int c = B3div(x, ROMAN_STOP[i]);
+    if (c > 0) {
+      x = mod(x, ROMAN_STOP[i]);
+      while (c > 0) {
+        j = i * 3;
+        while (ROMAN_CHAR[j] != -1) {
+          write(ROMAN_CHAR[j]);
+          j = j + 1;
+        }
+        c = c - 1;
+      }
+    }
+    i = i + 1;
+  }
+
+  return 0;
+}

@@ -3,6 +3,7 @@
 #include "./IR/translate.h"
 #include "./IR/temp.h"
 #include "./IR/ir.h"
+#include "codegen.h"
 
 extern FILE *yyin;
 extern Node* root;
@@ -30,11 +31,11 @@ int main(int argc, char **argv){
     int result = yyparse();
 
     temp_init();
-    // Print(root, 0);
 
     IRList code = translate_Program(root);
 
     FILE *out = stdout;  // 默认输出到终端
+    FILE *irl = fopen("out.ir", "w");
     
     if(argc >= 3){
         // 如果有第三个参数，输出到文件
@@ -47,16 +48,13 @@ int main(int argc, char **argv){
     }
     
     if(!has_fatal_error){
-        irlist_print(out, code);
-    }else{
-        printf("由于之前的错误，未生成中间代码。\n");
+        irlist_print(irl, code);
+        mips_codegen(out, code);
     }
+    else    printf("由于之前的错误，未生成中间代码。\n");
 
-    
     // 如果打开了文件，需要关闭它
-    if(out != stdout){
-        fclose(out);
-    }
+    if(out != stdout)    fclose(out);
     
     irlist_free(code);
 
