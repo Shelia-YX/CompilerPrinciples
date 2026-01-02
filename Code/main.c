@@ -4,6 +4,7 @@
 #include "./IR/temp.h"
 #include "./IR/ir.h"
 #include "codegen.h"
+#include "./optimize/read.h"
 
 extern FILE *yyin;
 extern Node* root;
@@ -24,21 +25,19 @@ int main(int argc, char **argv){
         perror(argv[1]);
         return 1;
     }
-    yyrestart(f);
 
-    lexical_error = 0;
-    syntax_error  = 0;
-    int result = yyparse();
-
-    temp_init();
-
-    IRList code = translate_Program(root);
+    IRList code;
 
     FILE *out = stdout;  // 默认输出到终端
-    FILE *irl = fopen("out.ir", "w");
+    // FILE *irl = fopen("out.ir", "w");
     
     if(argc >= 3){
         // 如果有第三个参数，输出到文件
+        IRList code = ir_parse_file(argv[1]);
+
+        const_propagation_local(&code);
+        // local_dce(&code);
+
         out = fopen(argv[2], "w");
         if(!out){
             perror(argv[2]);
@@ -47,11 +46,11 @@ int main(int argc, char **argv){
         }
     }
     
-    if(!has_fatal_error){
-        irlist_print(irl, code);
-        mips_codegen(out, code);
-    }
-    else    printf("由于之前的错误，未生成中间代码。\n");
+    // if(!has_fatal_error){
+        irlist_print(out, code);
+        // mips_codegen(out, code);
+    // }
+    // else    printf("由于之前的错误，未生成中间代码。\n");
 
     // 如果打开了文件，需要关闭它
     if(out != stdout)    fclose(out);
